@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"io"
 	"os"
+	"strings"
 )
 
 type Version string
@@ -17,6 +18,13 @@ const (
 )
 
 type Uri string
+
+func (u *Uri) GetId() string {
+	if *u == "" {
+		return ""
+	}
+	return string(([]byte)(string(*u))[1:])
+}
 
 type UpAxis string
 
@@ -133,7 +141,7 @@ type InstanceController struct {
 	HasSid
 	HasName
 	HasUrl
-	Skeleton     []*Skeleton    `xml:"skeleton"`
+	Skeleton     []*Skeleton   `xml:"skeleton"`
 	BindMaterial *BindMaterial `xml:"bind_material"`
 	HasExtra
 }
@@ -170,11 +178,6 @@ type Targets struct {
 
 // VertexWeights describes the combination of joints and weights used by a skin.
 type VertexWeights struct {
-	//TODO
-}
-
-// Accessor declares an access pattern to one of the array elements <float_array>, <int_array>, <Name_array>, <bool_array>, and <IDREF_array>.
-type Accessor struct {
 	//TODO
 }
 
@@ -256,14 +259,14 @@ type Source struct {
 type InputShared struct {
 	Offset   uint   `xml:"offset,attr"`
 	Semantic string `xml:"semantic,attr"`
-	Source   Uri `xml:"source,attr"`
+	Source   Uri    `xml:"source,attr"`
 	Set      uint   `xml:"set,attr,omitempty"`
 }
 
 // InputUnshared declares the input semantics of a data source.
 type InputUnshared struct {
 	Semantic string `xml:"semantic,attr"`
-	Source   Uri `xml:"source,attr"`
+	Source   Uri    `xml:"source,attr"`
 }
 
 // Extra provides arbitrary additional information about or related to its parent element.
@@ -284,7 +287,20 @@ type TechniqueCore struct {
 
 //TechniqueCommon specifies the information for a specific element for the common profile that all COLLADA implementations must support.
 type TechniqueCommon struct {
-	XML string `xml:",innerxml"`
+	Accessor Accessor `xml:"accessor"`
+}
+
+type Accessor struct {
+	Count  int     `xml:"count,attr"`
+	Offset int     `xml:"offset,attr"`
+	Source string  `xml:"source,attr"`
+	Stride int     `xml:"stride,attr"`
+	Params []Param `xml:"param"`
+}
+
+type Param struct {
+	Name string `xml:"name,attr"`
+	Type string `xml:"type,attr"`
 }
 
 //ControlVertices describes the control vertices (CVs) of a spline.
@@ -347,7 +363,7 @@ type Linestrips struct {
 //Mesh describes basic geometric meshes using vertex and primitive information.
 type Mesh struct {
 	Source     []*Source     `xml:"source"`
-	Vertices   Vertices     `xml:"vertices"`
+	Vertices   Vertices      `xml:"vertices"`
 	Lines      []*Lines      `xml:"lines"`
 	Linestrips []*Linestrips `xml:"linestrips"`
 	Polygons   []*Polygons   `xml:"polygons"`
@@ -373,7 +389,7 @@ type HasPhs struct {
 	Ph []*Ph `xml:"ph"`
 }
 type Ph struct {
-	P P   `xml:"p"`
+	P P    `xml:"p"`
 	H []*H `xml:"h"`
 }
 
@@ -513,15 +529,15 @@ type Unit struct {
 //Asset defines asset-management information regarding its parent element.
 type Asset struct {
 	Contributor []*Contributor `xml:"contributor"`
-	Coverage    *Coverage     `xml:"coverage"`
-	Created     string        `xml:"created"`
-	Keywords    string        `xml:"keywords,omitempty"`
-	Modified    string        `xml:"modified"`
-	Revision    string        `xml:"revision,omitempty"`
-	Subject     string        `xml:"subject,omitempty"`
-	Title       string        `xml:"title,omitempty"`
-	Unit        *Unit         `xml:"unit"`
-	UpAxis      UpAxis        `xml:"up_axis,omitempty"`
+	Coverage    *Coverage      `xml:"coverage"`
+	Created     string         `xml:"created"`
+	Keywords    string         `xml:"keywords,omitempty"`
+	Modified    string         `xml:"modified"`
+	Revision    string         `xml:"revision,omitempty"`
+	Subject     string         `xml:"subject,omitempty"`
+	Title       string         `xml:"title,omitempty"`
+	Unit        *Unit          `xml:"unit"`
+	UpAxis      UpAxis         `xml:"up_axis,omitempty"`
 }
 
 //COLLADA declares the root of the document that contains some of the content in the COLLADA schema.
@@ -551,7 +567,7 @@ type Collada struct {
 	// LibraryPhysicsScenes []*LibraryPhysicsScenes `xml:"library_physics_scenes"`
 	// LibraryPhysicsScenes []*LibraryPhysicsScenes `xml:"library_physics_scenes"`
 	LibraryVisualScenes []*LibraryVisualScenes `xml:"library_visual_scenes"`
-	Scene               *Scene                `xml:"scene"`
+	Scene               *Scene                 `xml:"scene"`
 	HasExtra
 }
 
@@ -580,7 +596,7 @@ type EvaluateScene struct {
 type InstanceNode struct {
 	HasSid
 	HasName
-	HasUrl
+	Url   Uri `xml:"url,attr"`
 	Proxy Uri `xml:"proxy,attr,omitempty"`
 	HasExtra
 }
@@ -632,7 +648,7 @@ type Node struct {
 
 //Scene embodies the entire set of information that can be visualized from the contents of a COLLADA resource.
 type Scene struct {
-	InstancePhysicsScene    []*InstancePhysicsScene   `xml:"instance_physics_scene"`
+	InstancePhysicsScene    []*InstancePhysicsScene  `xml:"instance_physics_scene"`
 	InstanceVisualScene     *InstanceVisualScene     `xml:"instance_visual_scene"`
 	InstanceKinematicsScene *InstanceKinematicsScene `xml:"instance_kinematics_scene"`
 	HasExtra
@@ -798,7 +814,9 @@ type Modifier struct {
 
 //Newparam Creates a new, named parameter object and assigns it a type and an initial value. See Chapter 5: Core Elements Reference.
 type Newparam struct {
-	//TODO
+	HasSid
+	Sampler1D
+	Sampler2D
 }
 
 //ParamReference (reference) References a predefined parameter. See Chapter 5: Core Elements Reference.
@@ -1028,29 +1046,58 @@ type Format struct {
 	//TODO
 }
 type Image struct {
-	//TODO
+	HasId
+	HasSid
+	HasName
+	InitFrom *InitFrom `xml:"init_from"`
 }
+
+type Ref struct {
+	Ref string `xml:",chardata"`
+}
+
+type Hex struct {
+	Format string `xml:"format,attr"`
+}
+
 type InitFrom struct {
-	//TODO
+	Ref Ref  `xml:"ref"`
+	Hex *Hex `xml:"hex,omitempty"`
 }
-type InstanceImage struct {
-	//TODO
-}
+
 type LibraryImages struct {
-	//TODO
+	HasAsset
+	Image *Image `xml:"image"`
+	HasExtra
 }
+
 type Rgb struct {
 	//TODO
 }
 type FxSamplerCommon struct {
 	//TODO
 }
+
+type InstanceImage struct {
+	HasUrl
+	HasId
+	HasName
+}
+
+type SamplerSource struct {
+	Texture `xml:",chardata"`
+}
+
 type Sampler1D struct {
-	//TODO
+	InstanceImage *InstanceImage `xml:"instance_image,omitempty"`
+	Source        *SamplerSource `xml:"source,omitempty"`
 }
+
 type Sampler2D struct {
-	//TODO
+	InstanceImage *InstanceImage `xml:"instance_image,omitempty"`
+	Source        *SamplerSource `xml:"source,omitempty"`
 }
+
 type Sampler3D struct {
 	//TODO
 }
@@ -1076,46 +1123,50 @@ type TexturePipeline struct {
 }
 
 type P struct {
-    Ints
+	Ints
 }
 
 type Floats struct {
-    Values
+	Values
 }
 type Bools struct {
-    Values
+	Values
 }
 type IdRefs struct {
-    Values
+	Values
 }
 type Ints struct {
-    Values
+	Values
 }
 type Names struct {
-    Values
+	Values
 }
 type SidRefs struct {
-    Values
+	Values
 }
 type Tokens struct {
-    Values
+	Values
 }
 
 type Values struct {
 	V string `xml:",chardata"`
 }
 
+func (v *Values) ToSlice() []string {
+	return strings.Split(v.V, " ")
+}
+
 type Float3x3 struct {
-    Floats
+	Floats
 }
 type Float4x4 struct {
-    Floats
+	Floats
 }
 type Float4 struct {
-    Floats
+	Floats
 }
 type Float3 struct {
-    Floats
+	Floats
 }
 
 type Float struct {
