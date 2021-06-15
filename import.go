@@ -77,7 +77,8 @@ type LibraryAnimations struct {
 
 //Sampler declares an interpolation sampling function for an animation.
 type Sampler struct {
-	//TODO
+	InstanceImage *InstanceImage `xml:"instance_image,omitempty"`
+	Source        *SamplerSource `xml:"source,omitempty"`
 }
 
 //Camera declares a view into the scene hierarchy or scene graph.
@@ -816,8 +817,11 @@ type Modifier struct {
 //Newparam Creates a new, named parameter object and assigns it a type and an initial value. See Chapter 5: Core Elements Reference.
 type Newparam struct {
 	HasSid
-	Sampler1D
-	Sampler2D
+	Sampler2D *Sampler2D `xml:"sampler2D,omitempty"`
+	Float     *Float     `xml:"float,omitempty"`
+	Float2    *Float     `xml:"float2,omitempty"`
+	Float3    *Float     `xml:"float3,omitempty"`
+	Float4    *Float     `xml:"float4,omitempty"`
 }
 
 //ParamReference (reference) References a predefined parameter. See Chapter 5: Core Elements Reference.
@@ -1090,13 +1094,11 @@ type SamplerSource struct {
 }
 
 type Sampler1D struct {
-	InstanceImage *InstanceImage `xml:"instance_image,omitempty"`
-	Source        *SamplerSource `xml:"source,omitempty"`
+	Sampler
 }
 
 type Sampler2D struct {
-	InstanceImage *InstanceImage `xml:"instance_image,omitempty"`
-	Source        *SamplerSource `xml:"source,omitempty"`
+	Sampler
 }
 
 type Sampler3D struct {
