@@ -325,6 +325,7 @@ type Geometry struct {
 //InstanceGeometry instantiates a COLLADA geometry resource.
 type InstanceGeometry struct {
 	HasSid
+	HasId
 	HasName
 	HasUrl
 	BindMaterial *BindMaterial `xml:"bind_material"`
