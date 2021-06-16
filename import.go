@@ -817,6 +817,7 @@ type Modifier struct {
 //Newparam Creates a new, named parameter object and assigns it a type and an initial value. See Chapter 5: Core Elements Reference.
 type Newparam struct {
 	HasSid
+	Semantic  *Semantic  `xml:"semantic,omitempty"`
 	Sampler2D *Sampler2D `xml:"sampler2D,omitempty"`
 	Float     *Float     `xml:"float,omitempty"`
 	Float2    *Float     `xml:"float2,omitempty"`
@@ -836,7 +837,7 @@ type SamplerStates struct {
 
 //Semantic Provides metadata that describes the purpose of a parameter declaration.
 type Semantic struct {
-	//TODO
+	Value string `xml:",chardata"`
 }
 
 //Setparam Assigns a new value to a previously defined parameter. See main entry in Chapter 5: Core Elements Reference.
@@ -1223,7 +1224,7 @@ type HasTechnique struct {
 	TechniqueCore []*TechniqueCore `xml:"technique,omitempty"`
 }
 type HasTechniqueFx struct {
-	TechniqueFx []*TechniqueFx `xml:"technique,omitempty"`
+	TechniqueFx *TechniqueFx `xml:"technique,omitempty"`
 }
 type HasP struct {
 	P *P `xml:"p"`
