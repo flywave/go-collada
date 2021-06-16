@@ -820,9 +820,9 @@ type Newparam struct {
 	Semantic  *Semantic  `xml:"semantic,omitempty"`
 	Sampler2D *Sampler2D `xml:"sampler2D,omitempty"`
 	Float     *Float     `xml:"float,omitempty"`
-	Float2    *Float     `xml:"float2,omitempty"`
-	Float3    *Float     `xml:"float3,omitempty"`
-	Float4    *Float     `xml:"float4,omitempty"`
+	Float2    *Floats    `xml:"float2,omitempty"`
+	Float3    *Float3    `xml:"float3,omitempty"`
+	Float4    *Float4    `xml:"float4,omitempty"`
 }
 
 //ParamReference (reference) References a predefined parameter. See Chapter 5: Core Elements Reference.
