@@ -8,7 +8,8 @@ import (
 	"encoding/xml"
 	"io"
 	"os"
-	"strings"
+
+	"github.com/shopspring/decimal"
 )
 
 type Version string
@@ -376,6 +377,112 @@ type Mesh struct {
 	HasExtra
 }
 
+func (m *Mesh) HasTexCoord() bool {
+	for _, p := range m.Lines {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Linestrips {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Polygons {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Polylist {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Triangles {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Trifans {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Tristrips {
+		for _, input := range p.Input {
+			if input.Semantic == "TEXCOORD" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (m *Mesh) HasNormal() bool {
+	for _, p := range m.Lines {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Linestrips {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Polygons {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Polylist {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Triangles {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Trifans {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	for _, p := range m.Tristrips {
+		for _, input := range p.Input {
+			if input.Semantic == "NORMAL" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 //Polygons declares the binding of geometric primitives and vertex attributes for a <mesh>element.
 type Polygons struct {
 	HasName
@@ -411,6 +518,13 @@ type Spline struct {
 	//TODO
 }
 
+type Trig interface {
+	GetP() *P
+	GetCount() int
+	GetSharedInput() []*InputShared
+	GetMaterial() string
+}
+
 //Triangles provides the information needed to bind vertex attributes together and then organize those vertices into individual triangles.
 type Triangles struct {
 	HasName
@@ -419,6 +533,22 @@ type Triangles struct {
 	HasSharedInput
 	HasP
 	HasExtra
+}
+
+func (t *Triangles) GetP() *P {
+	return t.P
+}
+
+func (t *Triangles) GetCount() int {
+	return t.Count
+}
+
+func (t *Triangles) GetSharedInput() []*InputShared {
+	return t.Input
+}
+
+func (t *Triangles) GetMaterial() string {
+	return t.Material
 }
 
 //Trifans provides the information needed to bind vertex attributes together and then organize those vertices into connected triangles.
@@ -431,6 +561,22 @@ type Trifans struct {
 	HasExtra
 }
 
+func (t *Trifans) GetP() *P {
+	return t.P
+}
+
+func (t *Trifans) GetCount() int {
+	return t.Count
+}
+
+func (t *Trifans) GetSharedInput() []*InputShared {
+	return t.Input
+}
+
+func (t *Trifans) GetMaterial() string {
+	return t.Material
+}
+
 //Tristrips provides the information needed to bind vertex attributes together and then organize those vertices into connected triangles
 type Tristrips struct {
 	HasName
@@ -439,6 +585,22 @@ type Tristrips struct {
 	HasSharedInput
 	HasP
 	HasExtra
+}
+
+func (t *Tristrips) GetP() *P {
+	return t.P
+}
+
+func (t *Tristrips) GetCount() int {
+	return t.Count
+}
+
+func (t *Tristrips) GetSharedInput() []*InputShared {
+	return t.Input
+}
+
+func (t *Tristrips) GetMaterial() string {
+	return t.Material
 }
 
 //Vertices declares the attributes and identity of mesh-vertices.
@@ -1073,7 +1235,7 @@ type InitFrom struct {
 
 type LibraryImages struct {
 	HasAsset
-	Image *Image `xml:"image"`
+	Image []*Image `xml:"image"`
 	HasExtra
 }
 
@@ -1091,7 +1253,7 @@ type InstanceImage struct {
 }
 
 type SamplerSource struct {
-	Texture `xml:",chardata"`
+	Texture string `xml:",chardata"`
 }
 
 type Sampler1D struct {
@@ -1157,7 +1319,33 @@ type Values struct {
 }
 
 func (v *Values) ToSlice() []string {
-	return strings.Split(v.V, " ")
+	bt := []byte(v.V)
+	ay := []byte{}
+	strs := []string{}
+	hasE := false
+	for _, b := range bt {
+		if (b < 48 || b > 57) && b != 45 && b != 46 && b != 101 {
+			if len(ay) > 0 {
+				s := string(ay)
+				if hasE {
+					decimalNum, _ := decimal.NewFromString(s)
+					s = decimalNum.String()
+				}
+				strs = append(strs, s)
+				ay = []byte{}
+				hasE = false
+			}
+			continue
+		}
+		if b == 101 {
+			hasE = true
+		}
+		ay = append(ay, b)
+	}
+	if len(ay) > 0 {
+		strs = append(strs, string(ay))
+	}
+	return strs
 }
 
 type Float3x3 struct {
