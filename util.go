@@ -7,7 +7,7 @@ import (
 )
 
 func (uri *Uri) Id() (Id, bool) {
-	idPattern, _ := regexp.Compile("#([\\w-]+)")
+	idPattern, _ := regexp.Compile(`#([\w-]+)`)
 	matches := idPattern.FindStringSubmatch(string(*uri))
 	if matches != nil {
 		return Id(matches[1]), true
@@ -20,7 +20,7 @@ func (node *Node) HasGeometry() bool {
 }
 
 func (values *Values) Components() []string {
-    return strings.Split(values.V, " ")
+	return strings.Split(values.V, " ")
 }
 
 func (ints *Ints) I() []int {
@@ -46,8 +46,7 @@ func (floats *Floats) F32() []float32 {
 	vs := make([]float32, len(ss))
 	for i, value := range ss {
 		f, _ := strconv.ParseFloat(value, 32)
-        vs[i] = float32(f)
+		vs[i] = float32(f)
 	}
 	return vs
 }
-
